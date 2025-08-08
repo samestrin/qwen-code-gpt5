@@ -67,6 +67,9 @@ export type ContentGeneratorConfig = {
     frequency_penalty?: number;
     temperature?: number;
     max_tokens?: number;
+    max_output_tokens?: number; // Alias for max_tokens
+    stop?: string[];
+    seed?: number;
   };
   proxy?: string | undefined;
 };

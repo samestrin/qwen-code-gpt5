@@ -708,7 +708,82 @@ export class Config {
   }
 
   getSamplingParams(): Record<string, unknown> | undefined {
-    return this.sampling_params;
+    const envParams = this.parseEnvironmentSamplingParams();
+    const settingsParams = this.sampling_params || {};
+    
+    // Merge with precedence: env vars > settings > defaults
+    return {
+      ...settingsParams,
+      ...envParams,
+    };
+  }
+
+  private parseEnvironmentSamplingParams(): Record<string, unknown> {
+    const params: Record<string, unknown> = {};
+    
+    // Parse numeric parameters
+    if (process.env.OPENAI_TEMPERATURE) {
+      const temp = parseFloat(process.env.OPENAI_TEMPERATURE);
+      if (!isNaN(temp) && temp >= 0.0 && temp <= 2.0) {
+        params.temperature = temp;
+      }
+    }
+    
+    if (process.env.OPENAI_TOP_P) {
+      const topP = parseFloat(process.env.OPENAI_TOP_P);
+      if (!isNaN(topP) && topP >= 0.0 && topP <= 1.0) {
+        params.top_p = topP;
+      }
+    }
+    
+    if (process.env.OPENAI_TOP_K) {
+      const topK = parseInt(process.env.OPENAI_TOP_K, 10);
+      if (!isNaN(topK) && topK > 0) {
+        params.top_k = topK;
+      }
+    }
+    
+    if (process.env.OPENAI_REPETITION_PENALTY) {
+      const repPenalty = parseFloat(process.env.OPENAI_REPETITION_PENALTY);
+      if (!isNaN(repPenalty) && repPenalty > 0.0) {
+        params.repetition_penalty = repPenalty;
+      }
+    }
+    
+    if (process.env.OPENAI_MAX_TOKENS) {
+      const maxTokens = parseInt(process.env.OPENAI_MAX_TOKENS, 10);
+      if (!isNaN(maxTokens) && maxTokens > 0) {
+        params.max_tokens = maxTokens;
+      }
+    }
+    
+    if (process.env.OPENAI_MAX_OUTPUT_TOKENS) {
+      const maxOutputTokens = parseInt(process.env.OPENAI_MAX_OUTPUT_TOKENS, 10);
+      if (!isNaN(maxOutputTokens) && maxOutputTokens > 0) {
+        params.max_output_tokens = maxOutputTokens;
+      }
+    }
+    
+    if (process.env.OPENAI_SEED) {
+      const seed = parseInt(process.env.OPENAI_SEED, 10);
+      if (!isNaN(seed)) {
+        params.seed = seed;
+      }
+    }
+    
+    // Parse stop sequences (JSON array format)
+    if (process.env.OPENAI_STOP) {
+      try {
+        const stopSequences = JSON.parse(process.env.OPENAI_STOP);
+        if (Array.isArray(stopSequences)) {
+          params.stop = stopSequences;
+        }
+      } catch (error) {
+        console.warn('Invalid OPENAI_STOP format. Expected JSON array string.');
+      }
+    }
+    
+    return params;
   }
 
   getContentGeneratorTimeout(): number | undefined {

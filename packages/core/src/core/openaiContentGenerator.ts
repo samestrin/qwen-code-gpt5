@@ -1387,12 +1387,17 @@ export class OpenAIContentGenerator implements ContentGenerator {
             ? request.config.temperature
             : 0.0,
 
-      // Max tokens: config > request > undefined
-      ...(configSamplingParams?.max_tokens !== undefined
-        ? { max_tokens: configSamplingParams.max_tokens }
-        : request.config?.maxOutputTokens !== undefined
-          ? { max_tokens: request.config.maxOutputTokens }
-          : {}),
+      // Max tokens: max_output_tokens takes precedence over max_tokens
+      ...(() => {
+        if (configSamplingParams?.max_output_tokens !== undefined) {
+          return { max_tokens: configSamplingParams.max_output_tokens };
+        } else if (configSamplingParams?.max_tokens !== undefined) {
+          return { max_tokens: configSamplingParams.max_tokens };
+        } else if (request.config?.maxOutputTokens !== undefined) {
+          return { max_tokens: request.config.maxOutputTokens };
+        }
+        return {};
+      })(),
 
       // Top-p: config > request > default
       top_p:
@@ -1420,6 +1425,16 @@ export class OpenAIContentGenerator implements ContentGenerator {
       // Frequency penalty: config only
       ...(configSamplingParams?.frequency_penalty !== undefined
         ? { frequency_penalty: configSamplingParams.frequency_penalty }
+        : {}),
+
+      // Stop sequences: config only
+      ...(configSamplingParams?.stop !== undefined
+        ? { stop: configSamplingParams.stop }
+        : {}),
+
+      // Seed: config only
+      ...(configSamplingParams?.seed !== undefined
+        ? { seed: configSamplingParams.seed }
         : {}),
     };
 
