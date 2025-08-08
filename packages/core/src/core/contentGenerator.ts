@@ -70,6 +70,8 @@ export type ContentGeneratorConfig = {
     max_output_tokens?: number; // Alias for max_tokens
     stop?: string[];
     seed?: number;
+    metadata?: any; // Can be JSON object or string
+    store?: boolean;
   };
   proxy?: string | undefined;
 };

@@ -783,6 +783,30 @@ export class Config {
       }
     }
     
+    // Parse metadata (JSON or string) - only set if store is enabled
+    if (process.env.OPENAI_METADATA !== undefined && process.env.OPENAI_METADATA.trim().length > 0) {
+      // Only set metadata if store is explicitly enabled
+      const storeValue = process.env.OPENAI_STORE?.toLowerCase().trim();
+      if (storeValue === 'true' || storeValue === '1') {
+        let metadata: any = process.env.OPENAI_METADATA;
+        try {
+          metadata = JSON.parse(metadata);
+        } catch {
+          // If it's just a plain string, keep as-is
+        }
+        params.metadata = metadata;
+      }
+    }
+    
+    // Parse store (boolean) - only set if explicitly true
+    if (process.env.OPENAI_STORE) {
+      const storeValue = process.env.OPENAI_STORE.toLowerCase().trim();
+      if (storeValue === 'true' || storeValue === '1') {
+        params.store = true;
+      }
+      // Don't set store = false, leave it undefined so it's not sent to API
+    }
+    
     return params;
   }
 

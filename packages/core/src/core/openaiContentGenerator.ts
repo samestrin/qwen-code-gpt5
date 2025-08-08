@@ -205,11 +205,17 @@ export class OpenAIContentGenerator implements ContentGenerator {
         model: this.model,
         messages,
         ...samplingParams,
-        metadata: {
+      };
+
+      // Handle metadata merging: config metadata + session/prompt metadata
+      // Only set metadata if store is enabled (samplingParams.store === true)
+      if (samplingParams.metadata && samplingParams.store === true) {
+        createParams.metadata = {
+          ...(samplingParams.metadata as Record<string, unknown> || {}),
           sessionId: this.config.getSessionId?.(),
           promptId: userPromptId,
-        },
-      };
+        };
+      }
 
       if (request.config?.tools) {
         createParams.tools = await this.convertGeminiToolsToOpenAI(
@@ -339,11 +345,17 @@ export class OpenAIContentGenerator implements ContentGenerator {
         ...samplingParams,
         stream: true,
         stream_options: { include_usage: true },
-        metadata: {
+      };
+
+      // Handle metadata merging: config metadata + session/prompt metadata
+      // Only set metadata if store is enabled (samplingParams.store === true)
+      if (samplingParams.metadata && samplingParams.store === true) {
+        createParams.metadata = {
+          ...(samplingParams.metadata as Record<string, unknown> || {}),
           sessionId: this.config.getSessionId?.(),
           promptId: userPromptId,
-        },
-      };
+        };
+      }
 
       if (request.config?.tools) {
         createParams.tools = await this.convertGeminiToolsToOpenAI(
@@ -1435,6 +1447,16 @@ export class OpenAIContentGenerator implements ContentGenerator {
       // Seed: config only
       ...(configSamplingParams?.seed !== undefined
         ? { seed: configSamplingParams.seed }
+        : {}),
+
+      // Metadata: config only
+      ...(configSamplingParams?.metadata !== undefined
+        ? { metadata: configSamplingParams.metadata }
+        : {}),
+
+      // Store: config only
+      ...(configSamplingParams?.store !== undefined
+        ? { store: configSamplingParams.store }
         : {}),
     };
 
